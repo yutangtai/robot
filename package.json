@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.1",
-    "cheerio": "*",
+    "cheerio": "^1.0.0-rc.6",
     "dotenv": "^8.2.0",
     "linebot": "^1.6.1"
   },

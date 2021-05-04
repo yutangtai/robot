@@ -26,36 +26,41 @@ length: 2
 __proto__: Array(0)
 */
 bot.on('message', async event => {
+  let page
+  let totalPageNum
+  let title = ''
+  let nowPage = 1
   if (event.message.type === 'text') {
     try {
       await axios
-        .get(`https://cons.judicial.gov.tw/jcc/zh-tw/jep03?interYear=&interNo=&interKeyword=${encodeURI(event.message.text)}&startDate=&endDate=&submit=`)
-        .then(response => {
-          const $ = cheerio.load(response.data)
-          let page = $('.pagination .PagedList-pageCountAndLocation').find('a').text()
-          let totalPageNum = parseInt(/共(\d+)頁/g.exec(page)[1])
-          let title = ''
-          let nowPage = 1
-          if (!isNaN(totalPageNum)) {
-            console.log('koko')
-            axios.get(`https://cons.judicial.gov.tw/jcc/zh-tw/jep03?page=${nowPage}&interKeyword=${encodeURI(event.message.text)}`).then(response => {
-              while (nowPage < totalPageNum) {
-                $('.blocky_body').each((index, element) => {
-                  const getTitle = $(element).find('a').text()
-                  title += getTitle
-                  nowPage++
-                })
-              }
-            })
-          } else {
-            $('.blocky_body').each((index, element) => {
-              const getTitle = $(element).find('a').text()
-              title += getTitle
-            })
-          }
-          console.log(title, page)
-          event.reply(page + title)
-        })
+      .get(`https://cons.judicial.gov.tw/jcc/zh-tw/jep03?interYear=&interNo=&interKeyword=${encodeURI(event.message.text)}&startDate=&endDate=&submit=`)
+      .then(function(response){
+        const $ = cheerio.load(response.data)
+        page = $('.pagination .PagedList-pageCountAndLocation').find('a').text()
+        console.log('只有一頁') 
+          $('.blocky_body').each((index, element) => {
+            const getTitle = $(element).find('a').text()
+            title += getTitle
+          })
+      })
+      if(page !== ''){
+        console.log('不只一頁')
+        totalPageNum = parseInt(/共(\d+)頁/g.exec(page)[1])
+        while (nowPage <= totalPageNum) {
+          await axios.get(`https://cons.judicial.gov.tw/jcc/zh-tw/jep03?page=${nowPage}&interKeyword=${encodeURI(event.message.text)}`)
+          .then(function(response){
+            const $ = cheerio.load(response.data)
+              console.log(nowPage)
+              $('.blocky_body').each((index, element) => {
+                const getTitle = $(element).find('a').text()
+                title += getTitle
+              })
+              nowPage++
+            }
+          )}
+      }
+      console.log(title, page)
+      event.reply(page + title)        
     } catch (error) {
       console.log('發生錯誤')
       console.log(error)

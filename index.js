@@ -25,6 +25,16 @@ input: "第7頁 / 共41頁"
 length: 2
 __proto__: Array(0)
 */
+/*
+  /釋字第(\d+)號/g.exec('釋字第802號')
+  (2) ["釋字第802號", "802", index: 0, input: "釋字第802號", groups: undefined]
+  0: "釋字第802號"
+  1: "802"groups: undefined
+  index: 0
+  input: "釋字第802號"
+  length: 2
+  __proto__: Array(0)
+*/
 bot.on('message', async event => {
   let page
   let totalPageNum
@@ -37,14 +47,13 @@ bot.on('message', async event => {
       .then(function(response){
         const $ = cheerio.load(response.data)
         page = $('.pagination .PagedList-pageCountAndLocation').find('a').text()
-        console.log('只有一頁') 
           $('.blocky_body').each((index, element) => {
             const getTitle = $(element).find('a').text()
             title += getTitle
           })
       })
       if(page !== ''){
-        console.log('不只一頁')
+        console.log(page)
         totalPageNum = parseInt(/共(\d+)頁/g.exec(page)[1])
         while (nowPage <= totalPageNum) {
           await axios.get(`https://cons.judicial.gov.tw/jcc/zh-tw/jep03?page=${nowPage}&interKeyword=${encodeURI(event.message.text)}`)
@@ -52,15 +61,16 @@ bot.on('message', async event => {
             const $ = cheerio.load(response.data)
               console.log(nowPage)
               $('.blocky_body').each((index, element) => {
-                const getTitle = $(element).find('a').text()
+                const getTitle = `${$(element).find('a').text()}\n`
+                console.log(getTitle)
                 title += getTitle
               })
               nowPage++
             }
           )}
       }
-      console.log(title, page)
-      event.reply(page + title)        
+      console.log(title)
+      event.reply(title)        
     } catch (error) {
       console.log('發生錯誤')
       console.log(error)

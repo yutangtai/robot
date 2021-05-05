@@ -39,6 +39,7 @@ bot.on('message', async event => {
   let page
   let totalPageNum
   let title = ''
+  let titleLink = ''
   let nowPage = 1
   if (event.message.type === 'text') {
     try {
@@ -62,8 +63,11 @@ bot.on('message', async event => {
               console.log(nowPage)
               $('.blocky_body').each((index, element) => {
                 const getTitle = `${$(element).find('a').text()}\n`
+                const link = $(element).contents('a')
                 console.log(getTitle)
+                console.log(titleLink)
                 title += getTitle
+                titleLink += link
               })
               nowPage++
             }

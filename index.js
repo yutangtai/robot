@@ -43,121 +43,50 @@ bot.on('message', async event => {
   let dailyNasaImg = {}
   let nasa = ''
   let nowPage = 1
-  let nasaDetail = [{
-    "type": "bubble",
-    "hero": {
-      "type": "image",
-      "url": `${dailyNasaImg['url']}`,
-      "size": "full",
-      "aspectRatio": "20:13",
-      "aspectMode": "cover",
-      "action": {
-        "type": "uri",
-        "uri": "http://linecorp.com/"
-      }
-    },
-    "body": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
+  let nasaBubble = {
+    type: 'template',
+    altText: dailyNasaImg.title,
+    template: {
+      type: 'carousel',
+      columns: [{
+        thumbnailImageUrl: dailyNasaImg.url,
+        title: dailyNasaImg.title,
+        text: dailyNasaImg.explanation,
+        action: [
         {
-          "type": "text",
-          "text": "APOD",
-          "weight": "bold",
-          "size": "xl"
-        },
-        {
-          "type": "box",
-          "layout": "baseline",
-          "margin": "md",
-        },
-        {
-          "type": "box",
-          "layout": "vertical",
-          "margin": "lg",
-          "spacing": "sm",
-          "contents": [
-            {
-              "type": "box",
-              "layout": "baseline",
-              "spacing": "sm",
-              "contents": [
-                {
-                  "type": "text",
-                  "text": "Date",
-                  "color": "#aaaaaa",
-                  "size": "sm",
-                  "flex": 1
-                },
-                {
-                  "type": "text",
-                  "text": `${dailyNasaImg['date']}`,
-                  "wrap": true,
-                  "color": "#666666",
-                  "size": "sm",
-                  "flex": 5
-                }
-              ]
-            },
-            {
-              "type": "box",
-              "layout": "baseline",
-              "spacing": "sm",
-              "contents": [
-                {
-                  "type": "text",
-                  "text": "Explanation",
-                  "color": "#aaaaaa",
-                  "size": "sm",
-                  "flex": 1
-                },
-                {
-                  "type": "text",
-                  "text": `${dailyNasaImg['explanation']}`,
-                  "wrap": true,
-                  "color": "#666666",
-                  "size": "sm",
-                  "flex": 5
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    "footer": {
-      "type": "box",
-      "layout": "vertical",
-      "spacing": "sm",
-      "contents": [
-        {
-          "type": "button",
-          "style": "link",
-          "height": "sm",
-          "action": {
-            "type": "uri",
-            "label": "CALL",
-            "uri": "https://linecorp.com"
-          }
-        },
-        {
-          "type": "button",
-          "style": "link",
-          "height": "sm",
-          "action": {
-            "type": "uri",
-            "label": "WEBSITE",
-            "uri": "https://linecorp.com"
-          }
-        },
-        {
-          "type": "spacer",
-          "size": "sm"
-        }
-      ],
-      "flex": 0
-    }
-  }]
+          type: 'this is menu',
+          text: 'description',
+          data: 'action=buy&itemid=111'
+        },{
+          type: 'postback',
+          label:'Add to cart',
+          data: 'action=add&itemid=111'
+        },{
+          type: 'uri',
+          label: 'View detail',
+          uri: dailyNasaImg.url
+        }]
+      },
+      {
+        thumbnailImageUrl: dailyNasaImg.url,
+        title: 'this is menu',
+        text: 'description',
+        actions: [{
+          type: 'postback',
+          label: 'Buy',
+          data: 'action=buy&itemid=222'
+        }, {
+          type: 'postback',
+          label: 'Add to cart',
+          data: 'action=add&itemid=222'
+        }, {
+          type: 'uri',
+          label: 'View detail',
+          uri: dailyNasaImg.url
+      }]
+    }]
+  }
+}
   if (event.message.type === 'text') {
     try {
       await axios
@@ -192,7 +121,7 @@ bot.on('message', async event => {
       }
       await axios.get('https://api.nasa.gov/planetary/apod?api_key=aT15TABGgY6emL35mceWI7HtuZPHQwAagQm0numc')
       .then(function(response){
-        console.log(response.data)
+        // console.log(response.data)
         dailyNasaImg['title'] = response.data.title
         dailyNasaImg['date'] = response.data.date
         dailyNasaImg['explanation'] = response.data.explanation
@@ -200,9 +129,31 @@ bot.on('message', async event => {
         dailyNasaImg['copyright'] = response.data.copyright
         nasa += `Title: ${dailyNasaImg.title},\n Date: ${dailyNasaImg.date},\n Explanation: ${dailyNasaImg.explanation}, \n Copyright: ${dailyNasaImg.copyright} \n${dailyNasaImg.url}`
       })
-      console.log(title)
-      event.reply(nasa)        
-    } catch (error) {
+      // console.log(title)
+      console.log(nasaBubble)
+      event.reply({
+        type: 'template',
+        altText: 'this is a buttons template',
+        template: {
+          type: 'buttons',
+          thumbnailImageUrl: dailyNasaImg.url,
+          title: dailyNasaImg.title,
+          text: dailyNasaImg.copyright
+        },
+        action: {
+          type: 'uri',
+          label: 'View detail',
+          uri: dailyNasaImg.url
+        }
+        })
+      }
+      //   {
+      //   type: 'image',
+      //   originalContentUrl: dailyNasaImg.url,
+      //   previewImageUrl: dailyNasaImg.url
+      // }
+
+    catch (error) {
       console.log('發生錯誤')
       console.log(error)
     }

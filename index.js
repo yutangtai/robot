@@ -2,6 +2,38 @@ import linebot from 'linebot'
 import dotenv from 'dotenv'
 import axios from 'axios'
 import cheerio from 'cheerio'
+import line from '@line/bot-sdk'
+
+const client = new line.Client({
+  channelAccessToken:
+    '0PVC5v3GXKU5BKqsdLywm6UbeVYi12E3c2rJ+ETS9+TYz552NyoTHsiPqJzVQ/ELFIu2OThkdtASihFb0wCYAXZWdgEESzuncvGMvQsyDGccwlKyeDBZxbJH6GtioqEdq79US+VhdU2r+vr7GdosawdB04t89/1O/w1cDnyilFU='
+})
+
+const richmenu = {
+  size: {
+    width: 2500,
+    height: 1686
+  },
+  selected: false,
+  name: 'Nice richmenu',
+  chatBarText: '主選單',
+  areas: [
+    {
+      bounds: {
+        x: 0,
+        y: 0,
+        width: 2500,
+        height: 1686
+      },
+      action: {
+        type: 'postback',
+        data: 'action=buy&itemid=123'
+      }
+    }
+  ]
+}
+client.createRichMenu(richmenu).then(richMenuId => console.log(richMenuId))
+
 // 讓套件讀取 .env 檔案
 // 讀取後可以用 process.env.變數 使用
 dotenv.config()

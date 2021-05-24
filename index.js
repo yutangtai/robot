@@ -3,36 +3,57 @@ import dotenv from 'dotenv'
 import axios from 'axios'
 import cheerio from 'cheerio'
 import line from '@line/bot-sdk'
+import schedule from 'node-schedule'
 
-const client = new line.Client({
-  channelAccessToken:
-    '0PVC5v3GXKU5BKqsdLywm6UbeVYi12E3c2rJ+ETS9+TYz552NyoTHsiPqJzVQ/ELFIu2OThkdtASihFb0wCYAXZWdgEESzuncvGMvQsyDGccwlKyeDBZxbJH6GtioqEdq79US+VhdU2r+vr7GdosawdB04t89/1O/w1cDnyilFU='
-})
-
-const richmenu = {
-  size: {
-    width: 2500,
-    height: 1686
-  },
-  selected: false,
-  name: 'Nice richmenu',
-  chatBarText: '主選單',
-  areas: [
-    {
-      bounds: {
-        x: 0,
-        y: 0,
-        width: 2500,
-        height: 1686
-      },
-      action: {
-        type: 'postback',
-        data: 'action=buy&itemid=123'
-      }
+function scheduleCronstyle(){
+  schedule.scheduleJob('00 00 1 * * *', function(){
+    try{
+      let news = '';
+      let newsUrl = '';
+      axios
+      .get('https://cons.judicial.gov.tw/jcc/zh-tw')
+      .then(res => {
+        const $ = cheerio.load(res.data);
+        news = $('#tab-21 > table > tbody > tr:nth-child(1) > td:nth-child(2) > a').attr('href');
+        newsUrl = `https://cons.judicial.gov.tw${news}`;
+        console.log(news);
+        console.log(newsUrl);
+      })
+    }catch(err){
+      console.log(err);
     }
-  ]
+  });
 }
-client.createRichMenu(richmenu).then(richMenuId => console.log(richMenuId))
+scheduleCronstyle()
+
+// const client = new line.Client({
+//   channelAccessToken:''
+// })
+
+// const richmenu = {
+//   size: {
+//     width: 2500,
+//     height: 1686
+//   },
+//   selected: false,
+//   name: 'Nice richmenu',
+//   chatBarText: '主選單',
+//   areas: [
+//     {
+//       bounds: {
+//         x: 0,
+//         y: 0,
+//         width: 2500,
+//         height: 1686
+//       },
+//       action: {
+//         type: 'postback',
+//         data: 'action=buy&itemid=123'
+//       }
+//     }
+//   ]
+// }
+// client.createRichMenu(richmenu).then(richMenuId => console.log(richMenuId))
 
 // 讓套件讀取 .env 檔案
 // 讀取後可以用 process.env.變數 使用
@@ -302,11 +323,7 @@ bot.on('message', async event => {
                 url: dailyNasaImg.url,
                 size: 'full',
                 aspectRatio: '20:13',
-                aspectMode: 'cover',
-                action: {
-                  type: 'uri',
-                  uri: 'http://linecorp.com/'
-                }
+                aspectMode: 'cover'
               },
               body: {
                 type: 'box',
@@ -394,11 +411,6 @@ bot.on('message', async event => {
                   }
                 ],
                 flex: 0
-              },
-              action: {
-                type: 'message',
-                label: 'action',
-                text: 'hello'
               }
             }
           }

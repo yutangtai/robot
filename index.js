@@ -2,7 +2,7 @@ import linebot from 'linebot'
 import dotenv from 'dotenv'
 import axios from 'axios'
 import cheerio from 'cheerio'
-import line from '@line/bot-sdk'
+// import line from '@line/bot-sdk'
 import schedule from 'node-schedule'
 
 function scheduleCronstyle(){
@@ -19,12 +19,38 @@ function scheduleCronstyle(){
         console.log(news);
         console.log(newsUrl);
       })
+      let mingboNum = [];
+      let mingboContent = [];
+      let mingboTotalData = {}
+      let mingboTotalText = '';
+      axios
+      .get('https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=B0000001&kw1=%e8%a1%8c%e7%82%ba%e8%83%bd%e5%8a%9b')
+      .then(res => {
+        const $ = cheerio.load(res.data);
+        $('#pnLawFla > div > .row').each((index, element) => {
+          mingboNum.push($(element).find('.col-no').text())
+          mingboContent.push($(element).find('.col-data').text());
+        })
+        function mingboList(){
+          mingboNum.forEach((item, index) => {
+            mingboTotalData[mingboNum[index]] = mingboContent[index];
+          })
+          console.log(mingboTotalData[27]);
+          for(let i=0; i<mingboTotalData.length; i++){
+            mingboTotalText += `${mingboTotalData[i]}/n`;
+          }
+          console.log(mingboTotalText);
+        }
+        mingboList(); 
+      })
     }catch(err){
       console.log(err);
     }
   });
 }
 scheduleCronstyle()
+
+
 
 // const client = new line.Client({
 //   channelAccessToken:''
@@ -90,31 +116,31 @@ __proto__: Array(0)
 */
 bot.on('message', async event => {
   // 直接輸入 EXXX 所需變數-------------->
-  let userTypeStr = event.message.text
-  let userTypeArr = userTypeStr.split('')
-  let userTypeNumStr = ''
-  let finalNum
-  let expnoResponse = {}
+  let userTypeStr = event.message.text;
+  let userTypeArr = userTypeStr.split('');
+  let userTypeNumStr = '';
+  let finalNum;
+  let expnoResponse = {};
   function exponNum() {
     userTypeArr.splice(0, 1)
     for (let i = 0; i < userTypeArr.length; i++) {
-      userTypeNumStr += userTypeArr[i]
-      finalNum = parseInt(userTypeNumStr)
+      userTypeNumStr += userTypeArr[i];
+      finalNum = parseInt(userTypeNumStr);
     }
   }
   exponNum()
 
   // 直接輸入關鍵字所需變數------------->
-  let page
-  let nowPage = 1
-  let totalPageNum
+  let page;
+  let nowPage = 1;
+  let totalPageNum;
 
-  let titles = []
-  let titleLinks = []
+  let titles = [];
+  let titleLinks = [];
 
   // 直接輸入'nasa'所需變數 -------------->
-  let dailyNasaImg = {}
-  let nasa = ''
+  let dailyNasaImg = {};
+  // let nasa = ''
 
   if (event.message.type === 'text') {
     try {
@@ -298,18 +324,45 @@ bot.on('message', async event => {
           }
         })
       }
+      let newsQuickReply;
+      if(event.message.text === '阿國，最近有什麼新鮮事嗎？'){
+        newsQuickReply = {
+          "type": "text", 
+          "text": "來！想要看什麼自己選 σ`∀´)σ",
+          "quickReply": {
+            "items": [
+              {
+                "type": "action",
+                "action": {
+                  "type": "uri",
+                  "label": "🔨司法院大法官",
+                  "uri": "https://cons.judicial.gov.tw/jcc/zh-tw"
+                }
+              },
+              {
+                "type": "action",
+                "action": {
+                  "type": "uri",
+                  "label": "📐全國法規資料庫",
+                  "uri": "https://law.moj.gov.tw/News/NewsList.aspx"
+                }
+              }
+            ]
+          }
+        }
+      }
       // 輸入 'nasa'---------------------------->
       let imgBubble
       if (event.message.text === 'nasa') {
         try {
-          await axios.get('https://api.nasa.gov/planetary/apod?api_key=aT15TABGgY6emL35mceWI7HtuZPHQwAagQm0numc').then(function (response) {
+          await axios.get('https://api.nasa.gov/planetary/apod?api_key=ajN3IgavxGPKKxbQWbOgNWwaboa9WH52bYYStele').then(function (response) {
             // console.log(response.data)
             dailyNasaImg.title = response.data.title
             dailyNasaImg.date = response.data.date
             dailyNasaImg.explanation = response.data.explanation
             dailyNasaImg.url = response.data.url
             dailyNasaImg.copyright = response.data.copyright
-            nasa += `Title: ${dailyNasaImg.title},\n Date: ${dailyNasaImg.date},\n Explanation: ${dailyNasaImg.explanation}, \n Copyright: ${dailyNasaImg.copyright} \n${dailyNasaImg.url}`
+            // nasa += `Title: ${dailyNasaImg.title},\n Date: ${dailyNasaImg.date},\n Explanation: ${dailyNasaImg.explanation}, \n Copyright: ${dailyNasaImg.copyright} \n${dailyNasaImg.url}`
           })
           imgBubble = {
             type: 'flex',
@@ -421,24 +474,27 @@ bot.on('message', async event => {
       }
       switch (event.message.text) {
         case `E${finalNum}`:
-          event.reply(exponBubble)
-          break
+          event.reply(exponBubble);
+          break;
         case 'nasa':
-          event.reply(imgBubble)
-          break
+          event.reply(imgBubble);
+          break;
         case '阿國':
           event.reply({
             type: 'text',
             text: '我來啦~~~ε≡ﾍ( ´∀`)ﾉ'
           })
-          break
+          break;
         case '自我介紹':
           event.reply({
             type: 'text',
             text:
               '哈囉~~我叫阿國，\n\n我的創造者之前也是位國考生，在幾次的登陸失敗後，她毅然決然地躍入另一個火坑（還好~~不然你們就看不到我了_(:3 」∠ )_)...\n\n她說不管你是已上岸的也好，或是快擱淺了(誤)，儘管我仍有點兩光兩光，但還是希望多少能幫助到你，也謝謝你願意給我這個表現機會！ԅ(¯﹃¯ԅ)\n\n另外，偷偷跟你說，輸入 "nasa" 會有小彩蛋喔！\n\n最後，送你我很喜歡的一句話：\n「我們都是唯一的，像星星一樣，我們都是最好的。」(林達陽．暗中發光)\n\nHave a nice day!(*´∀`)~♥'
           })
-          break
+          break;
+        case `阿國，最近有什麼新鮮事嗎？`:
+          event.reply(newsQuickReply);
+          break;
         default:
           event.reply(`🔎 搜尋結果:\n${replyStr}`)
       }

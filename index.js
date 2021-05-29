@@ -2,41 +2,6 @@ import linebot from 'linebot'
 import dotenv from 'dotenv'
 import axios from 'axios'
 import cheerio from 'cheerio'
-import schedule from 'node-schedule'
-
-// function scheduleCronstyle(){
-//   schedule.scheduleJob('00 00 1 * * *', function(){
-//     try{
-//       let mingboNum = [];
-//       let mingboContent = [];
-//       let mingboTotalData = {}
-//       let mingboTotalText = '';
-//       axios
-//       .get(`https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=B0000001&kw1=${encodeURI(event.message.text)}`)
-//       .then(res => {
-//         const $ = cheerio.load(res.data);
-//         $('#pnLawFla > div > .row').each((index, element) => {
-//           mingboNum.push($(element).find('.col-no').text())
-//           mingboContent.push($(element).find('.col-data').text());
-//         })
-//         function mingboList(){
-//           mingboNum.forEach((item, index) => {
-//             mingboTotalData[mingboNum[index]] = mingboContent[index];
-//           })
-//           console.log(mingboTotalData[27]);
-//           for(let i=0; i<mingboTotalData.length; i++){
-//             mingboTotalText += `${mingboTotalData[i]}/n`;
-//           }
-//           console.log(mingboTotalText);
-//         }
-//         mingboList(); 
-//       })
-//     }catch(err){
-//       console.log(err);
-//     }
-//   });
-// }
-// scheduleCronstyle()
 
 // 讓套件讀取 .env 檔案
 // 讀取後可以用 process.env.變數 使用
@@ -287,14 +252,23 @@ function exponNum(event) {
 
 // 法條查詢---------------------------------------------------->
 function lawClassfication(event){
+  let xianfaSearchResult;
+  let mingfaSearchResult;
+  let shinfaSearchResult;
+  let shinzenfaSearchResult;
+
   if(xianfaOpen){
     console.log('xianfaOpen');
+    xianfaSearchResult = xianfaMode(event);
   }else if(mingfaOpen){
     console.log('mingfaOpen');
+    mingfaSearchResult = mingfaMode(event);
   }else if(shinfaOpen){
     console.log('shinfaOpen');
+    shinfaSearchResult = shinfaMode(event);
   }else if(shinzenfaOpen){
     console.log('shinzenfaOpen');
+    shinzenfaSearchResult = shinzenfaMode(event);
   }else{
     if(event.message.text === '我想要查憲法'){
       console.log('進入憲法');
@@ -314,13 +288,97 @@ function lawClassfication(event){
       mingfaOpen = false;
       shinfaOpen = true;
       shinzenfaOpen = false;
-    }else if(event.message.text === '我想要查行政法'){
+    }else if(event.message.text === '我想要查行政程序法'){
       console.log('進入行政法');
       xianfaOpen = false;
       mingfaOpen = false;
       shinfaOpen = false;
       shinzenfaOpen = true;
     }
+  }
+}
+// 輸入字串處理
+function strToArr(event){
+  let searchLawUserType = event.message.text;
+  let searchLawUserTypeArr = searchLawUserType.split('');
+  let searchNewStr = '';
+  if(searchLawUserType.includes('K')){
+    searchLawUserTypeArr.splice(0,1);
+    for(let i=0; i<searchLawUserTypeArr.length; i++){
+      searchNewStr += searchLawUserTypeArr[i];
+    }
+    return searchNewStr;
+  }
+  return searchLawUserTypeArr;
+}
+// 撈網頁資料
+const getDataInfo = async(event, url) => {
+  let lawArr = [];
+  let lawShowUser = '';
+  await axios
+    .get(url)
+    .then(res => {
+      const $ = cheerio.load(res.data);
+      $('#pnLawFla > div > .row').each(function(index, element) {
+        lawArr.push($(element).find('.col-no').text() + '\n' + $(element).find('.col-data').text() + '\n');
+      })
+      for(let i=0; i<lawArr.length; i++){
+        lawShowUser += `🔸${lawArr[i]}\n`
+      }
+      console.log(lawShowUser);
+      event.reply(`🔎 搜尋結果:\n\n${lawShowUser}`);
+    })
+}
+// 憲法查詢
+const xianfaMode = async(event) => {
+  let keyword = strToArr(event);
+  console.log('keyword',keyword);  
+  let searchLawUserType = event.message.text;
+  if(keyword.includes(',') || keyword.includes('-') || keyword.includes('.')){
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=A0000001&norge=${encodeURI(searchLawUserType)}`);
+  }else if(searchLawUserType.includes('K')){
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=A0000001&kw1=${encodeURI(keyword)}}`);
+  }else{
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=A0000001&norge=${encodeURI(searchLawUserType)}`);
+  }
+}
+//民法查詢
+const mingfaMode = async(event) => {
+  let keyword = strToArr(event);
+  console.log('keyword',keyword);  
+  let searchLawUserType = event.message.text;
+  if(keyword.includes(',') || keyword.includes('-') || keyword.includes('.')){
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=B0000001&norge=${encodeURI(searchLawUserType)}`);
+  }else if(searchLawUserType.includes('K')){
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=B0000001&kw1=${encodeURI(keyword)}`);
+  }else{
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=B0000001&norge=${encodeURI(searchLawUserType)}`);
+  }
+}
+//刑法查詢
+const shinfaMode = async(event) => {
+  let keyword = strToArr(event);
+  console.log('keyword',keyword);  
+  let searchLawUserType = event.message.text;
+  if(keyword.includes(',') || keyword.includes('-') || keyword.includes('.')){
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=C0000001&norge=${encodeURI(searchLawUserType)}`);
+  }else if(searchLawUserType.includes('K')){
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=C0000001&kw1=${encodeURI(keyword)}`);
+  }else{
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=C0000001&norge=${encodeURI(searchLawUserType)}`);
+  }
+}
+// 行政程序法
+const shinzenfaMode = async(event) => {
+  let keyword = strToArr(event);
+  console.log('keyword',keyword);  
+  let searchLawUserType = event.message.text;
+  if(keyword.includes(',') || keyword.includes('-') || keyword.includes('.')){
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=A0030055&norge=${encodeURI(searchLawUserType)}`);
+  }else if(searchLawUserType.includes('K')){
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=A0030055&kw1=${encodeURI(keyword)}`);
+  }else{
+    getDataInfo(event, `https://law.moj.gov.tw/LawClass/LawSearchContent.aspx?pcode=A0030055&norge=${encodeURI(searchLawUserType)}`);
   }
 }
 
@@ -385,8 +443,8 @@ bot.on('message', async event => {
           "type": "action",
           "action": {
             "type": "message",
-            "label": "✔️行政法",
-            "text": "我想要查行政法"
+            "label": "✔️行政程序法",
+            "text": "我想要查行政程序法"
           }
         }
       ]
@@ -509,136 +567,13 @@ bot.on('message', async event => {
                   "type": "action",
                   "action": {
                     "type": "message",
-                    "label": "✔️行政法",
-                    "text": "我想要查行政法"
+                    "label": "✔️行政程序法",
+                    "text": "我想要查行政程序法"
                   }
                 }
               ]
             }
           }
-        }
-      }
-      
-      // 輸入 'nasa'---------------------------->
-      // 直接輸入'nasa'所需變數 -------------->
-      let dailyNasaImg = {};
-      let imgBubble;
-      if (event.message.text === 'nasa') {
-        try {
-          await axios.get('https://api.nasa.gov/planetary/apod?api_key=ajN3IgavxGPKKxbQWbOgNWwaboa9WH52bYYStele').then(function (response) {
-            // console.log(response.data)
-            dailyNasaImg.title = response.data.title;
-            dailyNasaImg.date = response.data.date;
-            dailyNasaImg.explanation = response.data.explanation;
-            dailyNasaImg.url = response.data.url;
-            dailyNasaImg.copyright = response.data.copyright;
-          })
-          imgBubble = {
-            type: 'flex',
-            altText: 'This is NASA daily image',
-            contents: {
-              type: 'bubble',
-              size: 'mega',
-              direction: 'ltr',
-              hero: {
-                type: 'image',
-                url: dailyNasaImg.url,
-                size: 'full',
-                aspectRatio: '20:13',
-                aspectMode: 'cover'
-              },
-              body: {
-                type: 'box',
-                layout: 'vertical',
-                contents: [
-                  {
-                    type: 'text',
-                    text: dailyNasaImg.title,
-                    weight: 'bold',
-                    size: 'xl'
-                  },
-                  {
-                    type: 'box',
-                    layout: 'vertical',
-                    margin: 'lg',
-                    spacing: 'sm',
-                    contents: [
-                      {
-                        type: 'box',
-                        layout: 'baseline',
-                        spacing: 'sm',
-                        contents: [
-                          {
-                            type: 'text',
-                            text: 'Detail',
-                            color: '#aaaaaa',
-                            size: 'sm',
-                            flex: 1
-                          },
-                          {
-                            type: 'text',
-                            text: dailyNasaImg.explanation,
-                            wrap: true,
-                            color: '#666666',
-                            size: 'sm',
-                            flex: 5
-                          }
-                        ]
-                      },
-                      {
-                        type: 'box',
-                        layout: 'baseline',
-                        spacing: 'sm',
-                        contents: [
-                          {
-                            type: 'text',
-                            text: 'Credit',
-                            color: '#aaaaaa',
-                            size: 'sm',
-                            flex: 1,
-                            weight: 'regular'
-                          },
-                          {
-                            type: 'text',
-                            text: dailyNasaImg.copyright,
-                            wrap: true,
-                            color: '#666666',
-                            size: 'sm',
-                            flex: 5
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              },
-              footer: {
-                type: 'box',
-                layout: 'vertical',
-                spacing: 'sm',
-                contents: [
-                  {
-                    type: 'button',
-                    style: 'link',
-                    height: 'sm',
-                    action: {
-                      type: 'uri',
-                      label: 'WEBSITE',
-                      uri: 'https://apod.nasa.gov/apod/astropix.html'
-                    }
-                  },
-                  {
-                    type: 'spacer',
-                    size: 'sm'
-                  }
-                ],
-                flex: 0
-              }
-            }
-          }
-        } catch (error) {
-          console.log('nasa 發生錯誤')
-          console.log(error)
         }
       }
       switch (event.message.text) {
@@ -658,7 +593,7 @@ bot.on('message', async event => {
         case `阿國，我想要查釋字！`:
           event.reply({
             type: 'text',
-            text: `好勒！\n請稍等，我跟你講一下規則喔！\n\n📌關鍵字檢索：\n     1️⃣直接輸入關鍵字即可\n     2️⃣所有符合條件者會以清單方式列出\n\n📌單一釋字查詢：\n     1️⃣輸入"E + 釋字"(例：E804)\n     2️⃣僅會顯示該筆釋字的爭點、解釋文及其理由書連結。\n\n若查無資料， "🔎 搜尋結果:" 會顯示空白。另外，有時資料量較大，因為人手不足，所以我整理起來需要花點時間，屆時還請多多見諒！(つд⊂)`
+            text: `好勒！\n請稍等，我跟你講一下規則喔！\n\n📌關鍵字檢索：\n     1️⃣直接輸入關鍵字即可\n     2️⃣所有符合條件者會以清單方式列出\n\n📌單一釋字查詢：\n     1️⃣輸入"E + 釋字"(例：E804)\n     2️⃣僅會顯示該筆釋字的爭點、解釋文及其理由書連結。\n\n若查無資料， "🔎 搜尋結果:" 會顯示空白。\n另外，有時資料量較大，因為人手不足 (創造者剝削我(つд⊂))，所以我整理起來需要花點時間，屆時還請多多見諒呀！`
           })
           break;
         case `阿國，最近有什麼新鮮事嗎？`:
@@ -670,32 +605,27 @@ bot.on('message', async event => {
         case '我想要查憲法':
           event.reply({
             type: 'text',
-            text: '<憲法>\n\n這裡簡單地跟你嘮叨一下規則喔！(*ﾟ∀ﾟ*)\n\n📌條文檢索：\n     請直接輸入關鍵字(例：平等)\n\n📌條號查詢：\n    1️⃣單一條號\n        直接輸入數字(例：5)\n    2️⃣多個條號\n        以半型 "," 區隔(例：5,7,129)\n    3️⃣連續條號\n        以半型 "-" 區隔(例：5-10)\n    4️⃣含有 "之" 的條號\n        以半型 "." 區隔(例：100.1)'
+            text: '<憲法>\n這裡簡單地跟你嘮叨一下規則喔！(*ﾟ∀ﾟ*)\n\n📌條文檢索：\n     輸入"K + 關鍵字" (例：K平等)\n\n📌條號查詢：\n    1️⃣單一條號\n        直接輸入數字 (例：5)\n    2️⃣多個條號\n        🔸不連續\n             以半型 " , " 區隔 (例：5,7)\n        🔸連續\n             以半型 " - " 區隔 (例：5-10)\n        🔸混用 (例：1,5-10,17)\n    3️⃣含有 "之" 的條號\n        以半型 " . " 區隔 (例：100.1)\n\n💡K 為大寫，且標點符號務必半型喔！'
           })
           break;
         case '我想要查民法':
           event.reply({
             type: 'text',
-            text: '<民法>\n\n好der好der！\n以下是輸入規則！(〃∀〃)\n\n📌條文檢索：\n     請直接輸入關鍵字(例：平等)\n\n📌條號查詢：\n    1️⃣單一條號\n        直接輸入數字(例：5)\n    2️⃣多個條號\n        以半型 "," 區隔(例：5,7,129)\n    3️⃣連續條號\n        以半型 "-" 區隔(例：5-10)\n    4️⃣含有 "之" 的條號\n        以半型 "." 區隔(例：100.1)'
+            text: '<民法>\n好der好der！\n以下是輸入規則！(〃∀〃)\n\n📌條文檢索：\n     輸入"K + 關鍵字" (例：K平等)\n\n📌條號查詢：\n    1️⃣單一條號\n        直接輸入數字 (例：5)\n    2️⃣多個條號\n        🔸不連續\n             以半型 " , " 區隔 (例：5,7)\n        🔸連續\n             以半型 " - " 區隔 (例：5-10)\n        🔸混用 (例：1,5-10,17)\n    3️⃣含有 "之" 的條號\n        以半型 " . " 區隔 (例：100.1)\n\n💡K 為大寫，且標點符號務必半型喔！'
           })
           break;
         case '我想要查刑法':
           event.reply({
             type: 'text',
-            text: '<刑法>\n\n收到！\n不過先看一下這裡喔(ㅅ˘ㅂ˘)\n\n📌條文檢索：\n     請直接輸入關鍵字(例：平等)\n\n📌條號查詢：\n    1️⃣單一條號\n        直接輸入數字(例：5)\n    2️⃣多個條號\n        以半型 "," 區隔(例：5,7,129)\n    3️⃣連續條號\n        以半型 "-" 區隔(例：5-10)\n    4️⃣含有 "之" 的條號\n        以半型 "." 區隔(例：100.1)'
+            text: '<刑法>\n收到！\n不過先看一下這裡喔(ㅅ˘ㅂ˘)\n\n📌條文檢索：\n     輸入"K + 關鍵字" (例：K平等)\n\n📌條號查詢：\n    1️⃣單一條號\n        直接輸入數字 (例：5)\n    2️⃣多個條號\n        🔸不連續\n             以半型 " , " 區隔 (例：5,7)\n        🔸連續\n             以半型 " - " 區隔 (例：5-10)\n        🔸混用 (例：1,5-10,17)\n    3️⃣含有 "之" 的條號\n        以半型 " . " 區隔 (例：100.1)\n\n💡K 為大寫，且標點符號務必半型喔！'
           })
           break;
-        case '我想要查行政法':
+        case '我想要查行政程序法':
           event.reply({
             type: 'text',
-            text: '<行政法>\n\n歐給！\n老規矩如下蛤(o´罒`o)\n\n📌條文檢索：\n     請直接輸入關鍵字(例：平等)\n\n📌條號查詢：\n    1️⃣單一條號\n        直接輸入數字(例：5)\n    2️⃣多個條號\n        以半型 "," 區隔(例：5,7,129)\n    3️⃣連續條號\n        以半型 "-" 區隔(例：5-10)\n    4️⃣含有 "之" 的條號\n        以半型 "." 區隔(例：100.1)'
+            text: '<行政程序法>\n歐給！\n老規矩如下蛤(o´罒`o)\n\n📌條文檢索：\n     輸入"K + 關鍵字" (例：K平等)\n\n📌條號查詢：\n    1️⃣單一條號\n        直接輸入數字 (例：5)\n    2️⃣多個條號\n        🔸不連續\n             以半型 " , " 區隔 (例：5,7)\n        🔸連續\n             以半型 " - " 區隔 (例：5-10)\n        🔸混用 (例：1,5-10,17)\n    3️⃣含有 "之" 的條號\n        以半型 " . " 區隔 (例：100.1)\n\n💡K 為大寫，且標點符號務必半型喔！\n\n另外，因 line 的回覆有字數限制，所以若搜尋結果的資料量太大，我可能會直接暈倒給你看( ×ω× )(我的創造者似乎也懶得解決這個問題)，此時我建議可以改由條號查詢的方式，將範圍縮小，我就會再滿血復活了！ᕦ(ò_óˇ)ᕤ'
           })
           break;
-        case 'nasa':
-          event.reply(imgBubble);
-          break;
-        default:
-          // event.reply(`🔎 搜尋結果:\n${replyStr}`)
       }
     } catch (error) {
       console.log('發生錯誤')

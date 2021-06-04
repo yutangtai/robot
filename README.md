@@ -5,13 +5,13 @@
 > 釋字或法條更新了卻不知道嗎？<br>
 > 腦袋裡有關鍵字卻想不起來到底是哪個釋字或條號嗎？<br>
 > 不需要小六法，只需要打開手機，讓阿國來幫你！
-#### 機器人 ID & QRcode
-@935kvzlh
-<img src="images/qrcode.png" alt="qrcode">
-
 * 查詢釋字
 * 查詢法條
 * 查最新資訊
+#### 機器人 ID & QRcode
+##### @935kvzlh
+<img src="images/qrcode.png" alt="qrcode" height="100" width="auto">
+
 
 ### 👉使用方式
 1. 釋字查詢

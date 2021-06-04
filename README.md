@@ -12,10 +12,10 @@
 
 ### 👉使用方式
 1. 釋字查詢
-<img src="images/expon.jpg" alt="expon" style="width: auto; height: 300px">
+<img src="images/expon.jpg" alt="expon" width="auto" height="300">
 2. 法條查詢
-<img src="images/lawNum.jpg" alt="lawNum" style="width: auto; height: 300px">
+<img src="images/lawNum.jpg" alt="lawNum" width="auto" height="300">
 3. 最新資訊
-<img src="images/news.jpg" alt="news" style="width: auto; height: 300px">
+<img src="images/news.jpg" alt="news" width="auto" height="300">
 
 

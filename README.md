@@ -8,8 +8,10 @@
 * 查詢釋字
 * 查詢法條
 * 查最新資訊
-#### 機器人 ID & QRcode
-##### @935kvzlh
+### 👉加好友
+* 機器人 ID
+@935kvzlh
+* QRcode
 <img src="images/qrcode.png" alt="qrcode" height="100" width="auto">
 
 

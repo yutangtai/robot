@@ -46,4 +46,4 @@
 
 ### 👉資料來源
 [司法院大法官](https://cons.judicial.gov.tw/jcc/zh-tw/jep03)<br>
-[全國法規字料庫](https://law.moj.gov.tw/)
+[全國法規資料庫](https://law.moj.gov.tw/)
